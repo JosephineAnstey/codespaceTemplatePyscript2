@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/mini-coi.js" scope="./"></script> 
+    <title>WNY Native Garden Planner</title>
+
+    <!-- Recommended meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <!-- PyScript CSS -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/core.css">
+
+    <!-- This script tag bootstraps PyScript -->
+    <script type="module" src="https://pyscript.net/releases/2024.6.1/core.js"></script>
+
+    <style>
+        .garden-bed {
+            width: 500px;
+            height: 500px;
+            background: #e8f5e9;
+            position: relative;
+            border: 3px solid #2e7d32;
+            margin: 20px auto;
+        }
+        .plant {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: help;
+        }
+        .controls {
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h1>Western NY Native Garden Designer</h1>
+        <select id="season-filter">
+            <option value="all">All Seasons</option>
+            <option value="spring">Spring Blooms</option>
+            <option value="summer">Summer Blooms</option>
+            <option value="fall">Fall Blooms</option>
+        </select>
+    </div>
+
+    <div class="garden-bed" id="garden-bed"></div>
+
+    <py-config>
+        packages = ["pandas"]
+    </py-config>
+
+    <py-script>
+        import pandas as pd
+        from js import document, console
+        from pyodide.ffi import create_proxy
+
+        # Plant database
+        plants = [
+            {"name": "Joe-Pye Weed", "emoji": "🌿", "x": 100, "y": 50, "season": "summer", "height": 7},
+            {"name": "Joe-Pye Weed2", "emoji": "🌿", "x": 150, "y": 45, "season": "summer", "height": 7},
+            {"name": "Joe-Pye Weed3", "emoji": "🌿", "x": 200, "y": 50, "season": "summer", "height": 7},
+            {"name": "Joe-Pye Weed4", "emoji": "🌿", "x": 250, "y": 45, "season": "summer", "height": 7},
+            {"name": "Switchgrass", "emoji": "🌾", "x": 400, "y": 50, "season": "fall", "height": 5},
+            {"name": "Switchgrass2", "emoji": "🌾", "x": 400, "y": 100, "season": "fall", "height": 5},
+            {"name": "Switchgrass3", "emoji": "🌾", "x": 300, "y": 50, "season": "fall", "height": 5},
+            {"name": "Switchgrass4", "emoji": "🌾", "x": 300, "y": 100, "season": "fall", "height": 5},
+            {"name": "Purple Coneflower", "emoji": "🌸", "x": 200, "y": 100, "season": "summer", "height": 4},
+            {"name": "Black-eyed Susan", "emoji": "🌼", "x": 300, "y": 200, "season": "summer", "height": 3},
+            {"name": "Bee Balm", "emoji": "🐝", "x": 250, "y": 150, "season": "summer", "height": 2.5},
+            {"name": "Wild Bergamot", "emoji": "🌱", "x": 350, "y": 250, "season": "summer", "height": 3},
+            {"name": "Cardinal Flower", "emoji": "❤️", "x": 150, "y": 350, "season": "summer", "height": 3},
+            {"name": "Wild Ginger", "emoji": "🍂", "x": 50, "y": 450, "season": "spring", "height": 0.5}
+            # Add all your plants here...
+        ]
+
+        
+
+        def draw_garden(season="all"):
+            garden = document.getElementById("garden-bed")
+            garden.innerHTML = ""
+            
+            for plant in plants:
+                if season == "all" or plant["season"] == season:
+                    div = document.createElement("div")
+                    div.className = "plant"
+                    div.style.left = f"{plant['x']}px"
+                    div.style.top = f"{plant['y']}px"
+                    div.style.width = f"{min(60, 20 + plant['height'] * 4)}px"  # Scales with height
+                    div.style.height = f"{min(60, 20 + plant['height'] * 4)}px"
+                    div.style.fontSize = f"{min(24, 12 + plant['height'])}px"  # Larger emoji for taller plants
+                    div.style.backgroundColor = (
+                        "#81c784" if plant["season"] == "spring" else
+                        "#4fc3f7" if plant["season"] == "summer" else
+                        "#ffb74d"
+                    )
+                    div.title = f"{plant['name']}\nHeight: {plant['height']}ft\nBlooms: {plant['season']}"
+                    div.textContent = plant["emoji"]
+                    garden.appendChild(div)
+
+        # Create a persistent proxy for the callback
+        def on_filter_change(event):
+            draw_garden(event.target.value)
+            
+        filter_proxy = create_proxy(on_filter_change)
+
+        # Initial draw
+        draw_garden()
+
+        # Connect filter with persistent proxy
+        document.getElementById("season-filter").addEventListener("change", filter_proxy)
+    </py-script>
+</body>
+</html>
